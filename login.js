@@ -21,7 +21,7 @@ function validatemail() {
 function disablelogin() {
   if (JSON.parse(localStorage.getItem("isLoggedIn")) === true) {
     submitbutton.disabled = true;
-    tochange[0].innerText = "Logout";
+    //tochange[0].innerText = "Logout";
   }
 }
 
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("username", emailInput.value);
       localStorage.setItem("password", passwdInput.value);
       localStorage.setItem("isLoggedIn", true);
-      disablelogin();
+      location.reload();
     } else {
       console.log("error");
     }
