@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpaceVoyager — Book Your Space Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "space-dark": "#0a0a18",
+              "space-blue": "#1a1a2e",
+              "space-purple": "#16213e",
+              "neon-blue": "#0ea5e9",
+              "neon-purple": "#8b5cf6",
+              "neon-cyan": "#06b6d4",
+              success: "#10b981",
+              error: "#ef4444",
+            },
+            fontFamily: {
+              orbitron: ["Orbitron", "sans-serif"],
+              exo: ["Exo 2", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        background: linear-gradient(to bottom, #0a0a18, #1a1a2e, #16213e);
+        background-attachment: fixed;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(
+            circle at 10% 20%,
+            rgba(14, 165, 233, 0.1) 0%,
+            transparent 20%
+          ),
+          radial-gradient(
+            circle at 90% 60%,
+            rgba(139, 92, 246, 0.1) 0%,
+            transparent 20%
+          ),
+          radial-gradient(
+            circle at 40% 80%,
+            rgba(6, 182, 212, 0.1) 0%,
+            transparent 20%
+          );
+        z-index: -1;
+      }
+
+      .star {
+        position: absolute;
+        background-color: white;
+        border-radius: 50%;
+        animation: twinkle 5s infinite;
+      }
+
+      @keyframes twinkle {
+        0%,
+        100% {
+          opacity: 0.2;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      .glow {
+        box-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
+      }
+
+      .text-glow {
+        text-shadow: 0 0 10px rgba(14, 165, 233, 0.7);
+      }
+
+      .card-hover {
+        transition: all 0.3s ease;
+        background: rgba(26, 26, 46, 0.7);
+        backdrop-filter: blur(10px);
+      }
+
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(14, 165, 233, 0.3);
+      }
+
+      .nav-link {
+        position: relative;
+      }
+
+      .nav-link::after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(to right, #0ea5e9, #8b5cf6);
+        transition: width 0.3s ease;
+      }
+
+      .nav-link:hover::after {
+        width: 100%;
+      }
+
+      .planet-card {
+        background: rgba(22, 33, 62, 0.7);
+        border: 1px solid rgba(14, 165, 233, 0.3);
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .planet-card:hover {
+        border-color: rgba(14, 165, 233, 0.7);
+        box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+      }
+
+      .btn-primary {
+        background: linear-gradient(to right, #0ea5e9, #8b5cf6);
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4);
+      }
+
+      .mobile-menu {
+        transition: all 0.3s ease;
+        max-height: 0;
+        overflow: hidden;
+      }
+
+      .mobile-menu.open {
+        max-height: 300px;
+      }
+
+      .form-input {
+        background: rgba(26, 26, 46, 0.7);
+        border: 1px solid rgba(14, 165, 233, 0.3);
+        border-radius: 8px;
+        color: white;
+        transition: all 0.3s ease;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: rgba(14, 165, 233, 0.7);
+        box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+      }
+
+      .form-input.error {
+        border-color: #ef4444;
+      }
+
+      .radio-option {
+        background: rgba(26, 26, 46, 0.7);
+        border: 1px solid rgba(14, 165, 233, 0.3);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .radio-option.selected {
+        border-color: rgba(14, 165, 233, 0.7);
+        background: rgba(14, 165, 233, 0.1);
+        box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+      }
+
+      .accommodation-card {
+        background: rgba(26, 26, 46, 0.7);
+        border: 1px solid rgba(14, 165, 233, 0.3);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .accommodation-card:hover {
+        border-color: rgba(14, 165, 233, 0.7);
+        transform: translateY(-5px);
+      }
+
+      .accommodation-card.selected {
+        border-color: rgba(14, 165, 233, 0.7);
+        background: rgba(14, 165, 233, 0.1);
+        box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+      }
+
+      .extra-option {
+        background: rgba(26, 26, 46, 0.7);
+        border: 1px solid rgba(14, 165, 233, 0.3);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .extra-option.selected {
+        border-color: rgba(14, 165, 233, 0.7);
+        background: rgba(14, 165, 233, 0.1);
+      }
+
+      .error-message {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+      }
+
+      .success-message {
+        color: #10b981;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .passenger-section {
+        border: 1px solid rgba(14, 165, 233, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background: rgba(26, 26, 46, 0.5);
+      }
+
+      .fade-in {
+        animation: fadeIn 0.5s;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .login-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body class="text-white font-exo min-h-screen">
+    <!-- Stars Background -->
+    <div id="stars-container"></div>
+
+    <!-- Navigation -->
+    <nav
+      class="bg-space-dark/80 backdrop-blur-md border-b border-neon-blue/20 sticky top-0 z-50"
+    >
+      <div
+        class="container mx-auto px-4 py-3 flex justify-between items-center"
+      >
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-10 h-10 rounded-full bg-gradient-to-r from-neon-blue to-neon-purple flex items-center justify-center glow"
+          >
+            <i class="fas fa-rocket text-white"></i>
+          </div>
+          <a href="index.html" class="font-orbitron text-xl font-bold text-glow"
+            >SpaceVoyager</a
+          >
+        </div>
+
+        <div class="hidden md:flex space-x-8">
+          <a
+            href="index.html"
+            class="nav-link hover:text-neon-blue transition-colors"
+            >Home</a
+          >
+          <a
+            href="destinations.html"
+            class="nav-link hover:text-neon-blue transition-colors"
+            >Destinations</a
+          >
+          <a href="booking.html" class="nav-link text-neon-blue font-semibold"
+            >Booking</a
+          >
+          <a
+            href="about.html"
+            class="nav-link hover:text-neon-blue transition-colors"
+            >About</a
+          >
+          <a
+            href="login.html"
+            class="nav-link hover:text-neon-blue transition-colors"
+            >Login</a
+          >
+        </div>
+
+        <!-- Mobile menu button -->
+        <div class="md:hidden">
+          <button id="mobile-menu-button" class="text-white focus:outline-none">
+            <i class="fas fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div
+        id="mobile-menu"
+        class="mobile-menu md:hidden bg-space-dark/90 backdrop-blur-md"
+      >
+        <div class="container mx-auto px-4 py-3 flex flex-col space-y-4">
+          <a
+            href="index.html"
+            class="hover:text-neon-blue transition-colors py-2 border-b border-neon-blue/20"
+            >Home</a
+          >
+          <a
+            href="destinations.html"
+            class="hover:text-neon-blue transition-colors py-2 border-b border-neon-blue/20"
+            >Destinations</a
+          >
+          <a
+            href="booking.html"
+            class="text-neon-blue font-semibold py-2 border-b border-neon-blue/20"
+            >Booking</a
+          >
+          <a
+            href="about.html"
+            class="hover:text-neon-blue transition-colors py-2 border-b border-neon-blue/20"
+            >About</a
+          >
+          <a
+            href="login.html"
+            class="hover:text-neon-blue transition-colors py-2"
+            >Login</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 relative z-10">
+      <!-- Hero Section -->
+      <section class="py-12 md:py-16 text-center">
+        <h1 class="font-orbitron text-4xl md:text-5xl font-bold mb-6 text-glow">
+          Book Your Space Journey
+        </h1>
+        <p class="text-xl max-w-2xl mx-auto mb-10 text-gray-300">
+          Begin your adventure to the stars. Fill out the form below to reserve
+          your spot on our next space voyage.
+        </p>
+      </section>
+
+      <!-- Booking Form -->
+      <section class="max-w-4xl mx-auto">
+        <div class="planet-card p-6 md:p-8 mb-12">
+          <form id="booking-form">
+            <!-- Journey Details Section -->
+            <div class="mb-10">
+              <h2
+                class="font-orbitron text-2xl font-bold mb-6 flex items-center text-glow"
+              >
+                <i class="fas fa-map-marked-alt mr-3 text-neon-blue"></i>
+                Journey Details
+              </h2>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Destination -->
+                <div>
+                  <label class="block text-gray-300 mb-2">Destination</label>
+                  <select id="destination" class="w-full form-input py-3 px-4">
+                    <option value="" class="bg-space-blue">
+                      Select your destination
+                    </option>
+                  </select>
+                  <div id="destination-error" class="error-message"></div>
+                </div>
+
+                <!-- Package -->
+                <div>
+                  <label class="block text-gray-300 mb-2">Package</label>
+                  <select id="package" class="w-full form-input py-3 px-4">
+                    <option value="" class="bg-space-blue">
+                      Select a package
+                    </option>
+                  </select>
+                  <div id="package-error" class="error-message"></div>
+                </div>
+              </div>
+
+              <!-- Departure Date -->
+              <div class="mt-6">
+                <label class="block text-gray-300 mb-2">Departure Date</label>
+                <input
+                  type="date"
+                  id="departure-date"
+                  class="w-full form-input py-3 px-4"
+                />
+                <div id="departure-date-error" class="error-message"></div>
+              </div>
+
+              <!-- Number of Passengers -->
+              <div class="mt-8">
+                <label class="block text-gray-300 mb-4"
+                  >Number of Passengers</label
+                >
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div
+                    class="radio-option py-4 text-center passenger-option"
+                    data-value="1"
+                  >
+                    <i class="fas fa-user text-xl mb-2 text-neon-blue"></i>
+                    <p class="font-semibold">Solo Traveler</p>
+                  </div>
+
+                  <div
+                    class="radio-option py-4 text-center passenger-option"
+                    data-value="2"
+                  >
+                    <i
+                      class="fas fa-user-friends text-xl mb-2 text-neon-blue"
+                    ></i>
+                    <p class="font-semibold">Couple (2)</p>
+                  </div>
+
+                  <div
+                    class="radio-option py-4 text-center passenger-option"
+                    data-value="3"
+                  >
+                    <i class="fas fa-users text-xl mb-2 text-neon-blue"></i>
+                    <p class="font-semibold">Group (3-6)</p>
+                  </div>
+                </div>
+                <div id="passengers-error" class="error-message"></div>
+              </div>
+
+              <!-- Dynamic Fields -->
+              <div id="dynamic-fields" class="mt-6 hidden">
+                <!-- Suit Size Field (appears for moonwalk packages) -->
+                <div id="suit-size-field" class="hidden mt-4">
+                  <label class="block text-gray-300 mb-2">Suit Size</label>
+                  <select class="w-full form-input py-3 px-4" id="suit-size">
+                    <option value="" class="bg-space-blue">
+                      Select your suit size
+                    </option>
+                    <option value="small" class="bg-space-blue">Small</option>
+                    <option value="medium" class="bg-space-blue">Medium</option>
+                    <option value="large" class="bg-space-blue">Large</option>
+                    <option value="x-large" class="bg-space-blue">
+                      X-Large
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Other dynamic fields can be added here -->
+              </div>
+
+              <!-- Accommodation Type -->
+              <div class="mt-8">
+                <label class="block text-gray-300 mb-4"
+                  >Accommodation Type</label
+                >
+                <div
+                  class="grid grid-cols-1 md:grid-cols-3 gap-4"
+                  id="accommodation-options"
+                >
+                  <!-- Options will be populated dynamically -->
+                </div>
+                <div id="accommodation-error" class="error-message"></div>
+              </div>
+            </div>
+
+            <!-- Passengers Information Section -->
+            <div class="mb-10">
+              <h2
+                class="font-orbitron text-2xl font-bold mb-6 flex items-center text-glow"
+              >
+                <i class="fas fa-user-astronaut mr-3 text-neon-blue"></i>
+                Passengers Information
+              </h2>
+
+              <div id="passengers-container">
+                <!-- Passenger sections will be added here dynamically -->
+              </div>
+
+              <div class="mt-6">
+                <button
+                  type="button"
+                  id="add-passenger"
+                  class="flex items-center text-neon-blue hover:text-neon-cyan transition-colors"
+                >
+                  <i class="fas fa-plus-circle mr-2"></i>
+                  Add Passenger
+                </button>
+              </div>
+            </div>
+
+            <!-- Personal Information Section -->
+            <div class="mb-10">
+              <h2
+                class="font-orbitron text-2xl font-bold mb-6 flex items-center text-glow"
+              >
+                <i class="fas fa-id-card mr-3 text-neon-blue"></i>
+                Personal Information
+              </h2>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- First Name -->
+                <div>
+                  <label class="block text-gray-300 mb-2">First Name</label>
+                  <input
+                    type="text"
+                    id="first-name"
+                    placeholder="Enter your first name"
+                    class="w-full form-input py-3 px-4"
+                  />
+                  <div id="first-name-error" class="error-message"></div>
+                </div>
+
+                <!-- Last Name -->
+                <div>
+                  <label class="block text-gray-300 mb-2">Last Name</label>
+                  <input
+                    type="text"
+                    id="last-name"
+                    placeholder="Enter your last name"
+                    class="w-full form-input py-3 px-4"
+                  />
+                  <div id="last-name-error" class="error-message"></div>
+                </div>
+
+                <!-- Email Address -->
+                <div>
+                  <label class="block text-gray-300 mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter your email"
+                    class="w-full form-input py-3 px-4"
+                  />
+                  <div id="email-error" class="error-message"></div>
+                </div>
+
+                <!-- Phone Number -->
+                <div>
+                  <label class="block text-gray-300 mb-2">Phone Number</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    placeholder="Enter your phone number"
+                    class="w-full form-input py-3 px-4"
+                  />
+                  <div id="phone-error" class="error-message"></div>
+                </div>
+              </div>
+
+              <!-- Special Requirements -->
+              <div class="mt-6">
+                <label class="block text-gray-300 mb-2"
+                  >Special Requirements</label
+                >
+                <textarea
+                  id="special-requirements"
+                  placeholder="Any special requirements or notes..."
+                  class="w-full form-input py-3 px-4 h-32"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Optional Extras Section -->
+            <div class="mb-10">
+              <h2
+                class="font-orbitron text-2xl font-bold mb-6 flex items-center text-glow"
+              >
+                <i class="fas fa-plus-circle mr-3 text-neon-blue"></i>
+                Optional Extras
+              </h2>
+
+              <div
+                class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                id="extras-container"
+              >
+                <!-- Extras will be populated dynamically -->
+              </div>
+            </div>
+
+            <!-- Price Summary -->
+            <div
+              class="mb-10 bg-space-blue/50 rounded-xl p-6 border border-neon-blue/30"
+            >
+              <h2 class="font-orbitron text-2xl font-bold mb-4 text-glow">
+                Price Summary
+              </h2>
+              <div class="space-y-3">
+                <div class="flex justify-between">
+                  <span>Base Price:</span>
+                  <span id="base-price">$0</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Package:</span>
+                  <span id="package-price">$0</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Accommodation:</span>
+                  <span id="accommodation-price">$0</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Extras:</span>
+                  <span id="extras-price">$0</span>
+                </div>
+                <div
+                  class="border-t border-neon-blue/30 pt-3 flex justify-between font-bold text-lg"
+                >
+                  <span>Total:</span>
+                  <span id="total-price">$0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Confirm Booking Section -->
+            <div class="border-t border-neon-blue/20 pt-8">
+              <div
+                class="flex flex-col md:flex-row justify-between items-center"
+              >
+                <div class="mb-4 md:mb-0">
+                  <p class="text-gray-300 text-sm">
+                    By confirming, you agree to our
+                    <a href="#" class="text-neon-blue hover:underline"
+                      >Terms of Service</a
+                    >
+                    and
+                    <a href="#" class="text-neon-blue hover:underline"
+                      >Space Travel Agreement</a
+                    >.
+                  </p>
+                </div>
+                <button
+                  type="submit"
+                  class="btn-primary text-white font-semibold py-3 px-8 rounded-lg glow"
+                >
+                  Confirm Booking
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal hidden">
+      <div class="planet-card p-8 max-w-md w-full mx-4">
+        <h3 class="font-orbitron text-2xl mb-4 text-center text-glow">
+          Complete Your Booking
+        </h3>
+        <p class="text-gray-300 mb-6 text-center">
+          Please log in to save your booking, or continue as a guest.
+        </p>
+
+        <div class="space-y-4">
+          <button
+            id="login-btn"
+            class="btn-primary text-white font-semibold w-full py-3 rounded-lg"
+          >
+            <i class="fas fa-user-astronaut mr-2"></i>Log In
+          </button>
+          <button
+            id="guest-btn"
+            class="border border-neon-blue text-neon-blue w-full py-3 rounded-lg font-semibold hover:bg-neon-blue/10 transition-colors"
+          >
+            <i class="fas fa-user mr-2"></i>Continue as Guest
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer
+      class="bg-space-dark border-t border-neon-blue/20 py-8 mt-12 relative z-10"
+    >
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="mb-4 md:mb-0">
+            <div class="flex items-center space-x-2 mb-2">
+              <div
+                class="w-8 h-8 rounded-full bg-gradient-to-r from-neon-blue to-neon-purple flex items-center justify-center"
+              >
+                <i class="fas fa-rocket text-white text-sm"></i>
+              </div>
+              <span class="font-orbitron text-lg">SpaceVoyager</span>
+            </div>
+            <p class="text-gray-400 text-sm">
+              © 2023 SpaceVoyager. All rights reserved.
+            </p>
+          </div>
+
+          <div class="flex space-x-6 mb-4 md:mb-0">
+            <a
+              href="#"
+              class="text-gray-400 hover:text-neon-blue transition-colors text-xl"
+            >
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a
+              href="#"
+              class="text-gray-400 hover:text-neon-blue transition-colors text-xl"
+            >
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a
+              href="#"
+              class="text-gray-400 hover:text-neon-blue transition-colors text-xl"
+            >
+              <i class="fab fa-facebook"></i>
+            </a>
+            <a
+              href="#"
+              class="text-gray-400 hover:text-neon-blue transition-colors text-xl"
+            >
+              <i class="fab fa-youtube"></i>
+            </a>
+          </div>
+
+          <div class="text-center md:text-right">
+            <p class="text-gray-400 text-sm">
+              Contact us: info@spacevoyager.com
+            </p>
+            <p class="text-gray-400 text-sm">+1 (800) SPACE-TRIP</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Application JavaScript -->
+    <script>
+      // Create stars background
+      function createStars() {
+        const container = document.getElementById("stars-container");
+        const starCount = 150;
+
+        for (let i = 0; i < starCount; i++) {
+          const star = document.createElement("div");
+          star.classList.add("star");
+
+          const size = Math.random() * 2 + 1;
+          star.style.width = `${size}px`;
+          star.style.height = `${size}px`;
+
+          star.style.left = `${Math.random() * 100}%`;
+          star.style.top = `${Math.random() * 100}%`;
+
+          star.style.animationDelay = `${Math.random() * 5}s`;
+
+          container.appendChild(star);
+        }
+      }
+
+      // Mobile menu toggle
+      document
+        .getElementById("mobile-menu-button")
+        .addEventListener("click", function () {
+          const menu = document.getElementById("mobile-menu");
+          menu.classList.toggle("open");
+        });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        createStars();
+      });
+    </script>
+    <script src="booking.js"></script>
+  </body>
+</html>
