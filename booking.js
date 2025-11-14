@@ -1,55 +1,160 @@
-let spaceData = [];
+let accommodationsData = [];
+let destinationsData = [];
+let passengerCount = 1;
+let maxPassengers = 1;
 
-let state = {
-  destination: null,
-  package: null,
-  passengers: 1,
-  accommodation: null,
-  extras: [],
-  passengerDetails: [],
-  totalPrice: 0,
-  isLoggedIn: false,
-};
+function setupAccommodationCardSelection() {
+  const accommodationCards = document.querySelectorAll(".accommodation-card");
+  const accommodationInput = document.getElementById("accommodation");
 
-const bookingForm = document.getElementById("booking-form");
-const destinationSelect = document.getElementById("destination");
-const packageSelect = document.getElementById("package");
-const departureDateInput = document.getElementById("departure-date");
-const passengerOptions = document.querySelectorAll(".passenger-option");
-const dynamicFields = document.getElementById("dynamic-fields");
-const suitSizeField = document.getElementById("suit-size-field");
-const accommodationOptions = document.getElementById("accommodation-options");
-const passengersContainer = document.getElementById("passengers-container");
-const addPassengerBtn = document.getElementById("add-passenger");
-const extrasContainer = document.getElementById("extras-container");
-const basePriceEl = document.getElementById("base-price");
-const packagePriceEl = document.getElementById("package-price");
-const accommodationPriceEl = document.getElementById("accommodation-price");
-const extrasPriceEl = document.getElementById("extras-price");
-const totalPriceEl = document.getElementById("total-price");
-const loginModal = document.getElementById("login-modal");
-const loginBtn = document.getElementById("login-btn");
-const guestBtn = document.getElementById("guest-btn");
-
-function populateDestinations() {
-  spaceData.destinations.forEach((dest) => {
-    const option = document.createElement("option");
-    option.value = dest.id;
-    option.textContent = dest.name;
-    option.className = "bg-space-blue";
-    destinationSelect.appendChild(option);
+  accommodationCards.forEach((card) => {
+    card.addEventListener("click", function () {
+      accommodationCards.forEach((c) => c.classList.remove("selected"));
+      this.classList.add("selected");
+      accommodationInput.value = this.dataset.type;
+      clearError("accommodation-error");
+    });
   });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  fetch("destinations.json")
-    .then((res) => res.json())
-    .then((data) => {
-      spaceData = data;
-      populateDestinations();
+async function loadAccommodations() {
+  try {
+    const response = await fetch("accomodations.json");
+
+    if (!response.ok) {
+      throw new Error(`Failed to load accommodations: ${response.status}`);
+    }
+
+    const data = await response.json();
+    accommodationsData = data.accommodations;
+
+    console.log("Accommodations loaded:", accommodationsData);
+  } catch (error) {
+    console.error("Error loading accommodations:", error);
+    alert("Unable to load accommodations. Please try again later.");
+  }
+}
+
+async function loadDestinations() {
+  try {
+    const response = await fetch("destinations.json");
+
+    if (!response.ok) {
+      throw new Error(`Failed to load destinations: ${response.status}`);
+    }
+
+    const data = await response.json();
+    destinationsData = data.destinations;
+
+    const destinationSelect = document.getElementById("destination");
+
+    while (destinationSelect.children.length > 1) {
+      destinationSelect.removeChild(destinationSelect.lastChild);
+    }
+
+    destinationsData.forEach((dest) => {
+      const option = document.createElement("option");
+      option.value = dest.id;
+      option.textContent = `${dest.name} - ${
+        dest.travelDuration
+      } - From $${dest.price.toLocaleString()}`;
+      option.setAttribute("data-destination", JSON.stringify(dest));
+      destinationSelect.appendChild(option);
     });
 
-  document
-    .querySelector('.passenger-option[data-value="1"]')
-    .classList.add("selected");
+    destinationSelect.addEventListener("change", function () {
+      const selectedOption = this.options[this.selectedIndex];
+      const accommodationsSection = document.getElementById(
+        "accommodations-section"
+      );
+
+      if (selectedOption.value) {
+        const dest = JSON.parse(
+          selectedOption.getAttribute("data-destination")
+        );
+
+        showAccommodationsForDestination(dest);
+        accommodationsSection.classList.add("visible");
+
+        updatePriceCalculation();
+      } else {
+        accommodationsSection.classList.remove("visible");
+      }
+    });
+  } catch (error) {
+    console.error("Error loading destinations:", error);
+
+    const destinationSelect = document.getElementById("destination");
+    const fallbackOption = document.createElement("option");
+    fallbackOption.value = "";
+    fallbackOption.textContent = "Unable to load destinations";
+    fallbackOption.disabled = true;
+    destinationSelect.appendChild(fallbackOption);
+
+    alert("Unable to load destinations. Please try again later.");
+  }
+}
+
+function showAccommodationsForDestination(destination) {
+  const accommodationsContainer = document.getElementById(
+    "accommodations-container"
+  );
+  const accommodationInput = document.getElementById("accommodation");
+
+  accommodationsContainer.innerHTML = "";
+
+  const availableAccommodationIds = destination.accommodations || [];
+
+  const availableAccommodations = accommodationsData.filter((acc) =>
+    availableAccommodationIds.includes(acc.id)
+  );
+  availableAccommodations.forEach((acc, index) => {
+    const card = document.createElement("div");
+    card.className = `accommodation-card ${index === 0 ? "selected" : ""}`;
+    card.dataset.type = acc.id;
+
+    card.innerHTML = `
+    <h3 class="font-orbitron text-neon-blue mb-2">${acc.name}</h3>
+    <p class="text-sm text-gray-400">${acc.shortDescription}</p>
+    <div class="mt-3 text-xs text-gray-500">
+      <div class="flex justify-between mb-1">
+        <span>Size:</span>
+        <span>${acc.size}</span>
+      </div>
+      <div class="flex justify-between mb-1">
+        <span>Occupancy:</span>
+        <span>${acc.occupancy}</span>
+      </div>
+      <div class="flex justify-between">
+        <span>Price:</span>
+        <span class="font-bold text-neon-cyan">$${acc.pricePerDay}/day</span>
+      </div>
+    </div>
+  `;
+
+    accommodationsContainer.appendChild(card);
+  });
+
+  if (availableAccommodations.length > 0) {
+    accommodationInput.value = availableAccommodations[0].id;
+  }
+
+  setupAccommodationCardSelection();
+}
+
+const destinationSelect = document.getElementById("destination");
+const selectedDestination =
+  destinationSelect.options[destinationSelect.selectedIndex];
+const destination = JSON.parse(
+  selectedDestination.getAttribute("data-destination")
+);
+
+const accommodationId = document.getElementById("accommodation").value;
+const accommodation = accommodationsData.find(
+  (acc) => acc.id === accommodationId
+);
+
+document.addEventListener("DOMContentLoaded", async function () {
+  await loadAccommodations();
+  await loadDestinations();
 });
