@@ -805,6 +805,250 @@ function saveBookingToLocalStorage(bookingData) {
     const totalPrice = document.getElementById("total-price").textContent;
     const numericPrice = parseFloat(totalPrice.replace(/[^\d.]/g, ""));
 
+    // Create complete booking object
+    const completeBooking = {
+      bookingId: bookingId,
+      userId: currentUser.id,
+      userEmail: currentUser.email,
+      bookingDate: new Date().toISOString(),
+      status: "confirmed",
+      destination: {
+        id: destination.id,
+        name: destination.name,
+        description: destination.description,
+        travelDuration: destination.travelDuration,
+        distance: destination.distance,
+        gravity: destination.gravity,
+        temperature: destination.temperature,
+        price: destination.price,
+      },
+      departureDate: bookingData.departureDate,
+      accommodation: {
+        id: accommodation.id,
+        name: accommodation.name,
+        shortDescription: accommodation.shortDescription,
+        size: accommodation.size,
+        occupancy: accommodation.occupancy,
+        pricePerDay: accommodation.pricePerDay,
+        price: accommodation.pricePerDay, // For backward compatibility
+      },
+      passengers: bookingData.passengerForms.map((passenger) => ({
+        firstName: passenger.firstName,
+        lastName: passenger.lastName,
+        email: passenger.email,
+        phone: passenger.phone,
+        specialRequirements: passenger.specialRequirements,
+      })),
+      totalPrice: numericPrice,
+      passengerType: bookingData.passengers,
+    };
+
+    // Get existing bookings from localStorage
+    const existingBookings = JSON.parse(
+      localStorage.getItem("spaceBookings") || "[]"
+    );
+
+    // Add new booking
+    existingBookings.push(completeBooking);
+
+    // Save back to localStorage
+    localStorage.setItem("spaceBookings", JSON.stringify(existingBookings));
+
+    console.log("Booking saved successfully:", completeBooking);
+    return bookingId;
+  } catch (error) {
+    console.error("Error saving booking to localStorage:", error);
+    return false;
+  }
+}
+
+// Function to show booking confirmation popup
+function showBookingConfirmation(bookingData, reservationId) {
+  // Create popup overlay
+  const popupOverlay = document.createElement("div");
+  popupOverlay.className =
+    "fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto";
+  popupOverlay.id = "confirmation-popup";
+
+  // Get destination details
+  const destinationSelect = document.getElementById("destination");
+  const selectedDestination =
+    destinationSelect.options[destinationSelect.selectedIndex];
+  const destination = JSON.parse(
+    selectedDestination.getAttribute("data-destination")
+  );
+
+  // Get accommodation details
+  const accommodationId = document.getElementById("accommodation").value;
+  const accommodation = accommodationsData.find(
+    (acc) => acc.id === accommodationId
+  );
+
+  // Get total price
+  const totalPrice = document.getElementById("total-price").textContent;
+
+  // Create popup content with fixed height and scrollable content
+  popupOverlay.innerHTML = `
+    <div class="form-container max-w-2xl w-full mx-auto transform scale-95 animate-scaleIn my-8 max-h-[90vh] flex flex-col p-6">
+      <div class="text-center mb-6 flex-shrink-0">
+        <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-neon-cyan rounded-full flex items-center justify-center mx-auto mb-4 glow">
+          <i class="fas fa-check text-white text-2xl"></i>
+        </div>
+        <h2 class="font-orbitron text-3xl text-neon-cyan mb-2 text-glow">Booking Confirmed!</h2>
+        <p class="text-gray-300">Your space journey has been successfully booked</p>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto space-y-4">
+        <div class="bg-space-dark/60 rounded-xl p-6 border border-neon-blue/30">
+          <h3 class="font-orbitron text-xl text-neon-blue mb-4">Booking Details</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <p class="text-gray-400 text-sm">Reservation ID</p>
+              <p class="font-bold text-white">#${reservationId}</p>
+            </div>
+            <div>
+              <p class="text-gray-400 text-sm">Booking Date</p>
+              <p class="font-bold text-white">${new Date().toLocaleDateString()}</p>
+            </div>
+          </div>
+          
+          <div class="space-y-3">
+            <div class="flex justify-between items-center py-2 border-b border-neon-blue/20">
+              <span class="text-gray-300">Destination</span>
+              <span class="font-orbitron text-neon-cyan">${
+                destination.name
+              }</span>
+            </div>
+            
+            <div class="flex justify-between items-center py-2 border-b border-neon-blue/20">
+              <span class="text-gray-300">Departure Date</span>
+              <span class="font-bold text-white">${new Date(
+                bookingData.departureDate
+              ).toLocaleDateString()}</span>
+            </div>
+            
+            <div class="flex justify-between items-center py-2 border-b border-neon-blue/20">
+              <span class="text-gray-300">Travel Duration</span>
+              <span class="font-bold text-white">${
+                destination.travelDuration
+              }</span>
+            </div>
+            
+            <div class="flex justify-between items-center py-2 border-b border-neon-blue/20">
+              <span class="text-gray-300">Accommodation</span>
+              <span class="font-bold text-white">${accommodation.name}</span>
+            </div>
+            
+            <div class="flex justify-between items-center py-2 border-b border-neon-blue/20">
+              <span class="text-gray-300">Passengers</span>
+              <span class="font-bold text-white">${
+                bookingData.passengerForms.length
+              }</span>
+            </div>
+            
+            <div class="flex justify-between items-center py-2">
+              <span class="text-gray-300 text-lg">Total Amount</span>
+              <span class="font-orbitron text-neon-cyan text-xl">${totalPrice}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-space-dark/60 rounded-xl p-6 border border-neon-blue/30">
+          <h3 class="font-orbitron text-xl text-neon-blue mb-4">Passenger Information</h3>
+          <div class="space-y-3 max-h-40 overflow-y-auto">
+            ${bookingData.passengerForms
+              .map(
+                (passenger, index) => `
+              <div class="bg-space-dark/40 p-3 rounded-lg">
+                <h4 class="font-orbitron text-neon-cyan text-sm mb-1">Passenger ${
+                  index + 1
+                }</h4>
+                <p class="text-white text-sm">${passenger.firstName} ${
+                  passenger.lastName
+                }</p>
+                <p class="text-gray-400 text-xs">${passenger.email} • ${
+                  passenger.phone
+                }</p>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex flex-col md:flex-row gap-4 mt-4 flex-shrink-0">
+        <button 
+          id="download-pdf-btn"
+          class="btn-primary text-white px-6 py-3 rounded-lg font-bold flex items-center justify-center gap-2 flex-1"
+        >
+          <i class="fas fa-download"></i>
+          Download Confirmation
+        </button>
+        <button 
+          id="close-popup-btn"
+          class="btn-secondary text-white px-6 py-3 rounded-lg font-bold flex-1"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Add CSS animation
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    .animate-scaleIn {
+      animation: scaleIn 0.3s ease-out forwards;
+    }
+    #confirmation-popup {
+      overflow-y: auto;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Add popup to page
+  document.body.appendChild(popupOverlay);
+
+  // Setup event listeners
+  document
+    .getElementById("download-pdf-btn")
+    .addEventListener("click", function () {
+      downloadBookingConfirmation(
+        bookingData,
+        destination,
+        accommodation,
+        reservationId,
+        totalPrice
+      );
+    });
+
+  document
+    .getElementById("close-popup-btn")
+    .addEventListener("click", function () {
+      document.body.removeChild(popupOverlay);
+      document.head.removeChild(style);
+    });
+
+  // Close popup when clicking outside
+  popupOverlay.addEventListener("click", function (e) {
+    if (e.target === popupOverlay) {
+      document.body.removeChild(popupOverlay);
+      document.head.removeChild(style);
+    }
+  });
+}
 
 // NEW: Updated form submission handler
 document
